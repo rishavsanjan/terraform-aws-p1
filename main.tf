@@ -38,3 +38,51 @@ resource "aws_route_table_association" "rta2" {
   subnet_id = aws_subnet.sub2.id 
   route_table_id =  aws_route_table.RT.id
 }
+
+resource "aws_security_group" "sg" {
+  name = "security-group-using-terraform"
+  vpc_id = aws_vpc.myvpc.id 
+  
+  ingress {
+    description = "HTTP from VPC"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_s3_bucket" "s3" {
+  bucket = "rishavsanjan-bucket-from-terraform"
+}
+
+
+resource "aws_instance" "webserver1" {
+  ami = "ami-0b6d9d3d33ba97d99"
+  instance_type = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.sg.id]
+  subnet_id = aws_subnet.sub1.id
+  user_data = base64encode(file("ws1data.sh"))
+}
+
+resource "aws_instance" "webserver2" {
+  ami = "ami-0b6d9d3d33ba97d99"
+  instance_type = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.sg.id]
+  subnet_id = aws_subnet.sub2.id
+  user_data = base64encode(file("ws2data.sh"))
+}
+
